@@ -120,11 +120,6 @@ class PREPARE:
     def alert_error_msg_line(self,result):
         if self.line_notify_token != None:
             return f'\nproject: {self.table}\nfile_name: {self.path_now}\nprocess: {result["process"]}\nmessage: {result["message"]}\nerror: {result["error"]}\n'
-            
-                
-    def info_msg(self,process,msg):
-        result = {"status":constant.STATUS_INFO,"file_name":self.path_now,"process":process,"message":msg,"error":"-"}
-        print(result)
 
     def ok_msg(self,process):
         result = {"status":constant.STATUS_OK,"file_name":"-","process":process,"message":"program running done","error":"-"}
@@ -206,7 +201,7 @@ class PREPARE:
         return mfg_date_string
     
 
-class TALYSURF(PREPARE):
+class ALARMLIST(PREPARE):
 
     
     def __init__(self,path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,line_notify_token=None):

@@ -1,22 +1,16 @@
-# data talysurf
-TALYSURF_PATH = 'D:/talysurf_ng' #'/data/talysurf_ng' ,'D:/data/talysurf_ng'
-TALYSURF_TABLE = 'data_talysurf'
-TALYSURF_TABLE_COLUMNS ='''
-            registered_at datetime,
-            parts_no varchar(20),
-	    lot_no varchar(10),
-            entry_date datetime,
-            mc_no varchar(10),
-            measurement_item varchar(50),
-            measurement_value float,
-            mi_no varchar(10),
-            individual_judgement varchar(5),
-            checked varchar(10),
-            checked_time datetime
-            '''
+# data ALARMLIST
+ALARMLIST_PATH = 'D:/data/data_alarmlist/gd' #'/data/ALARMLIST_ng' ,'D:/data/ALARMLIST_ng'
+ALARMLIST_TABLE = 'data_alarmlist'
+ALARMLIST_TABLE_COLUMNS ='''
+                registered_at datetime,
+                topic varchar(50),
+                occurred varchar(50),
+                restored varchar(50),
+                time_diff int,
+                mc_no varchar(50),'''
             
-TALYSURF_TABLE_LOG = 'log_talysurf'
-TALYSURF_TABLE_COLUMNS_LOG ='''
+ALARMLIST_TABLE_LOG = 'log_ALARMLIST'
+ALARMLIST_TABLE_COLUMNS_LOG ='''
             registered_at datetime,
 	    status varchar(50),
             file_name varchar(50),

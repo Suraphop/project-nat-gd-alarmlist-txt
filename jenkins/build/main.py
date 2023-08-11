@@ -1,23 +1,23 @@
 import utils.constant as constant
 import os
 
-from utils.csv_to_db import TALYSURF
+from utils.csv_to_db import ALARMLIST
 from dotenv import load_dotenv
 
 load_dotenv()
 
-talysurf = TALYSURF(
-        path=constant.TALYSURF_PATH,
+ALARMLIST = ALARMLIST(
+        path=constant.ALARMLIST_PATH,
         server=os.getenv('SERVER'),
         database=os.getenv('DATABASE'),
         user_login=os.getenv('USER_LOGIN'),
         password=os.getenv('PASSWORD'),
-        table=constant.TALYSURF_TABLE,
-        table_columns=constant.TALYSURF_TABLE_COLUMNS,
-        table_log=constant.TALYSURF_TABLE_LOG,
-        table_columns_log=constant.TALYSURF_TABLE_COLUMNS_LOG,
+        table=constant.ALARMLIST_TABLE,
+        table_columns=constant.ALARMLIST_TABLE_COLUMNS,
+        table_log=constant.ALARMLIST_TABLE_LOG,
+        table_columns_log=constant.ALARMLIST_TABLE_COLUMNS_LOG,
         line_notify_token=os.getenv('LINE_NOTIFY_TOKEN'),
     )
 
 
-talysurf.run()
+ALARMLIST.run()
