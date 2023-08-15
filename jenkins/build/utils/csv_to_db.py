@@ -169,18 +169,12 @@ class PREPARE:
 
     def read_path(self):
         path_list = []
-        file_extension = '.csv'
-        today = date.today()
-        yesterday = date.today()- timedelta(days=1)
-        df = pd.DataFrame()
+        file_extension = '.txt'
         for root,dirs,files in os.walk(self.path):
             for name in files: 
                 if name.endswith(file_extension):    
                     file_path = os.path.join(root,name)
-                    #path_today = file_path.split("\\")[-4]+'-'+file_path.split("\\")[-3]+'-'+file_path.split("\\")[-2] #dev
-                    path_today = file_path.split("/")[-4]+'-'+file_path.split("/")[-3]+'-'+file_path.split("/")[-2] #production
-                    if path_today == str(today) or path_today == str(yesterday):
-                       path_list.append(file_path)
+                    path_list.append(file_path)
         if len(path_list) == 0:
             self.error_msg(self.read_path.__name__,"read path function: csv file not found","check csv file")
         else: 
@@ -213,56 +207,46 @@ class ALARMLIST(PREPARE):
 
     def read_data(self):
         try:
-            col_names = ['Parts No.','Lot No.','Entry date','M/C No.','Measurement item',
-            'Measurement value','M/I No.','Individual judgement']
-            df = pd.read_csv(self.path_now,usecols=col_names)
-            df.rename(columns = {'Parts No.':'parts_no',
-            'Lot No.':'lot_no','Entry date':'entry_date','M/C No.':'mc_no',
-            'Measurement item':'measurement_item',
-            'Measurement value':'measurement_value','M/I No.':'mi_no',
-            'Individual judgement':'individual_judgement'}, inplace = True)
+            df = pd.read_csv(self.path_now,sep=",")
             df.dropna(inplace=True)
-            check_ng = df[df['individual_judgement'] == 'NG']
+            
+            df['time_diff'] = '' # add time diff
+            for i in range(len(df['restored'])):
+                date_stored = datetime.strptime(df['restored'][i], '%Y-%m-%d %H:%M:%S')
+                date_occurred = datetime.strptime(df['occurred'][i], '%Y-%m-%d %H:%M:%S')
+                df['time_diff'][i] = pd.Timedelta(date_stored - date_occurred).seconds
 
-            if check_ng.empty:
-                df_result = df.copy()
-                df_result = df_result.head(1)
-                df_result["checked"] = 'OK'
-            else:
-                df_result = check_ng.copy()
-                df_result['checked'] = 'WAITING'
+            df['mc_no'] = self.path_now.split("_")[-1].split(".")[0] # add filename to column
 
-            self.df = df_result
+            self.df = df
             self.info_msg(self.read_data.__name__,f"csv to pd")
         except Exception as e:
             self.error_msg(self.read_data.__name__,"pd cannot read csv file",e)
     
     def query_duplicate(self):
-        query =  """SELECT TOP(1000)
-         CONVERT(VARCHAR, [entry_date],20) AS 'entry_date',
-         [measurement_item]
-         FROM ["""+self.database+"""].[dbo].["""+self.table+"""]  
-         order by [registered_at] desc"""
-        df = self.query_df(query)
-        df['entry_date'] = pd.to_datetime(df.entry_date)
-        return df
-
+        mc_no = self.path_now.split("_")[-1].split(".")[0]
+        return """SELECT TOP(3000) 
+                [topic] ,
+                CONVERT(VARCHAR, [occurred],20) AS 'occurred',
+                [mc_no] 
+            FROM ["""+self.database+"""].[dbo].["""+self.table+"""] 
+            where [mc_no] = '"""+mc_no+"""' 
+            order by [registered_at] desc"""
+        
     def check_duplicate(self):
         try:
-            df_from_db = self.query_duplicate()
-            df = self.df.copy()
-            df['entry_date'] = pd.to_datetime(df.entry_date)
-            df_right_only = pd.merge(df_from_db,df , on = ["entry_date","measurement_item"], how = "right", indicator = True) 
+            df_from_db = self.query_df(self.query_duplicate())
+            df_right_only = pd.merge(df_from_db,self.df , on = ["topic","occurred","mc_no"], how = "right", indicator = True) 
             df_right_only = df_right_only[df_right_only['_merge'] == 'right_only'].drop(columns=['_merge'])
             if df_right_only.empty:              
                 self.info_msg(self.check_duplicate.__name__,f"data is not new for update")
             else:
+                self.df_insert = df_right_only
                 self.info_msg(self.check_duplicate.__name__,f"we have data new")
-                self.df_insert = df_right_only       
-                return constant.STATUS_OK    
+                return constant.STATUS_OK
         except Exception as e:
             self.error_msg(self.check_duplicate.__name__,"cannot select with sql code",e)
-       
+    
     def df_to_db(self):
         #connect to db
         cnxn,cursor=self.conn_sql()
@@ -273,26 +257,20 @@ class ALARMLIST(PREPARE):
                 INSERT INTO [{self.database}].[dbo].[{self.table}] 
                 values(
                     getdate(), 
-                    '{row.parts_no}', 
-                    '{row.lot_no}',
-                    '{row.entry_date}',
-                    '{row.mc_no}',
-                    '{row.measurement_item}',
-                    '{row.measurement_value}',
-                    '{row.mi_no}',
-                    '{row.individual_judgement}',
-                    '{row.checked}',
-                    getdate()
-                    )
+                    '{row.topic}', 
+                    '{row.occurred}', 
+                    '{row.restored}', 
+                    '{row.time_diff}',
+                    '{row.mc_no}')
                     """
                 )
-
             cnxn.commit()
             cursor.close()
             self.df_insert = None   
-            self.info_msg(self.df_to_db.__name__,f"insert data successfully")        
+            self.info_msg(self.df_to_db.__name__,f"insert data successfully")
+            
         except Exception as e:
-            self.error_msg(self.df_to_db.__name__,"cannot insert df to sql",e)
+            self.error_msg(self.df_to_db.__name__,"cannot insert alarmlist to sql",e)
 
     def run(self):
         self.stamp_time()
@@ -304,8 +282,8 @@ class ALARMLIST(PREPARE):
             self.path_now = self.path_list[i]
             self.read_data()
             if self.check_duplicate() == constant.STATUS_OK:
-                self.df_to_db()
-                print("ok")       
+                  self.df_to_db()
+                  print("ok")       
         self.ok_msg(self.df_to_db.__name__)
 
 if __name__ == "__main__":
