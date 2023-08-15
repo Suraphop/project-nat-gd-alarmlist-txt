@@ -20,8 +20,8 @@ def slack_notify(webhook_url,msg):
 if __name__ == "__main__":
     print("must be run with main")
     
-    value = line_notify("yixwt2Mpe0I4v7WWWrLV2VXmzgTg1e3AWa6RFj6YhQB","hello")
-    print(value)
+    # value = line_notify("yixwt2Mpe0I4v7WWWrLV2VXmzgTg1e3AWa6RFj6YhQB","hello")
+    # print(value)
   
-    value = slack_notify("https://hooks.slack.com/services/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","testing_token") 
+    value = slack_notify("https://hooks.slack.com/services/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","testing_token") 
     print(value)

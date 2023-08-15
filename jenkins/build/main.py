@@ -16,7 +16,7 @@ ALARMLIST = ALARMLIST(
         table_columns=constant.ALARMLIST_TABLE_COLUMNS,
         table_log=constant.ALARMLIST_TABLE_LOG,
         table_columns_log=constant.ALARMLIST_TABLE_COLUMNS_LOG,
-        line_notify_token=os.getenv('LINE_NOTIFY_TOKEN'),
+        notify_token=os.getenv('NOTIFY_TOKEN'),
     )
 
 

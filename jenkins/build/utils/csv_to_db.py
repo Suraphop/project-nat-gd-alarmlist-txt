@@ -14,7 +14,7 @@ from sqlalchemy import create_engine,text,engine
 class PREPARE:
 
 
-    def __init__(self,path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,line_notify_token):
+    def __init__(self,path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,notify_token):
         self.path = path
         self.server = server
         self.database = database
@@ -28,7 +28,7 @@ class PREPARE:
         self.path_now = None
         self.df = None
         self.df_insert = None
-        self.line_notify_token = line_notify_token
+        self.notify_token = notify_token
 
     def stamp_time(self):
         now = datetime.now()
@@ -90,8 +90,8 @@ class PREPARE:
         result = {"status":constant.STATUS_ERROR,"file_name":self.path_now,"process":process,"message":msg,"error":e}
       
         try:
-            self.alert_line(self.alert_error_msg_line(result))
-            #self.alert_slack(self.alert_error_msg_slack(result))
+            #self.alert_line(self.alert_error_msg_line(result))
+            self.alert_slack(self.alert_error_msg_slack(result))
             self.log_to_db(result)
             sys.exit()
         except Exception as e:
@@ -99,7 +99,7 @@ class PREPARE:
             sys.exit()
     
     def alert_line(self,msg):
-        value = alert.line_notify(self.line_notify_token,msg)
+        value = alert.line_notify(self.notify_token,msg)
         value = json.loads(value)  
         if value["message"] == constant.STATUS_OK:
             self.info_msg(self.alert_line.__name__,'send msg to line notify')
@@ -107,18 +107,18 @@ class PREPARE:
             self.info_msg(self.alert_line.__name__,value)
             
     def alert_slack(self,msg):
-        value = alert.slack_notify(self.slack_notify_token,msg) 
+        value = alert.slack_notify(self.notify_token,msg) 
         if value == constant.STATUS_OK:
             self.info_msg(self.alert_slack.__name__,'send msg to slack notify')
         else:
             self.info_msg(self.alert_slack.__name__,value)
 
     def alert_error_msg_slack(self,result):
-        if self.slack_notify_token != None:
+        if self.notify_token != None:
             return f'\nproject: {self.table}\nfile_name: {self.path_now}\nprocess: {result["process"]}\nmessage: {result["message"]}\nerror: {result["error"]}\n'  
 
     def alert_error_msg_line(self,result):
-        if self.line_notify_token != None:
+        if self.notify_token != None:
             return f'\nproject: {self.table}\nfile_name: {self.path_now}\nprocess: {result["process"]}\nmessage: {result["message"]}\nerror: {result["error"]}\n'
 
     def info_msg(self,process,msg):
@@ -202,8 +202,8 @@ class PREPARE:
 class ALARMLIST(PREPARE):
 
     
-    def __init__(self,path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,line_notify_token=None):
-        super().__init__(path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,line_notify_token)
+    def __init__(self,path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,notify_token=None):
+        super().__init__(path,server,database,user_login,password,table,table_columns,table_log,table_columns_log,notify_token)
 
     def read_data(self):
         try:
@@ -282,8 +282,7 @@ class ALARMLIST(PREPARE):
             self.path_now = self.path_list[i]
             self.read_data()
             if self.check_duplicate() == constant.STATUS_OK:
-                  self.df_to_db()
-                  print("ok")       
+                  self.df_to_db()    
         self.ok_msg(self.df_to_db.__name__)
 
 if __name__ == "__main__":

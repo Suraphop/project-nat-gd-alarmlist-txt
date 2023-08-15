@@ -9,11 +9,11 @@ ALARMLIST_TABLE_COLUMNS ='''
                 time_diff int,
                 mc_no varchar(50),'''
             
-ALARMLIST_TABLE_LOG = 'log_ALARMLIST'
+ALARMLIST_TABLE_LOG = 'log_alarmlist'
 ALARMLIST_TABLE_COLUMNS_LOG ='''
             registered_at datetime,
-	    status varchar(50),
-            file_name varchar(50),
+	        status varchar(50),
+            file_name varchar(100),
             process varchar(50),
             message varchar(50),
             error varchar(MAX),
