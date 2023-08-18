@@ -3,6 +3,8 @@
 echo "***************************"
 echo "** deploy to production v.1.3***"
 echo "***************************"
+echo "
+docker run --restart=always -d -v D:/data/data_alarmlist/gd/:/data/data_alarmlist/gd/ --name alarmlist_gd nht/alarmlist-gd-project:1.0.0"
 
 IMAGE="machine-data-project"
 
