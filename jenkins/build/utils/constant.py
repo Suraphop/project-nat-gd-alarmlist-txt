@@ -1,5 +1,5 @@
 # data ALARMLIST
-ALARMLIST_PATH = 'D:/data/data_alarmlist/gd' #'/data/ALARMLIST_ng' ,'D:/data/ALARMLIST_ng'
+ALARMLIST_PATH = '/data/data_alarmlist/gd' #'/data/ALARMLIST_ng' ,'D:/data/ALARMLIST_ng'
 ALARMLIST_TABLE = 'data_alarmlist'
 ALARMLIST_TABLE_COLUMNS ='''
                 registered_at datetime,
